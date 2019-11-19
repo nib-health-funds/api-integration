@@ -1,7 +1,7 @@
 ---
 swagger: "2.0"
 info:
-  description: API for querying data stored in WHICS.
+  description: API for querying data stored in serveral CRM systems.
   version: 1.0.0
   title: whics integration API
   contact:

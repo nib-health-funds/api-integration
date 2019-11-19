@@ -6,6 +6,8 @@ info:
   title: whics integration API
   contact:
     email: CoreApplicationsDevelopment@nib.com.au
+host: api-gateway.nib-cf-test.com
+basePath: /whics-integration-api_salesforce/
 schemes:
 - https
 paths:

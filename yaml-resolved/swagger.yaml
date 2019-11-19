@@ -1105,6 +1105,73 @@ definitions:
       message:
         type: string
         description: The error message.
+  groupContact:
+    type: object
+    properties:
+      contactId:
+        type: string
+        description: A unique identifier for the contact.
+      birthdate:
+        type: string
+        format: date
+        description: The contact's date of birth.
+      salutation:
+        type: string
+        description: Honorific abbreviation, word, or phrase to be used in front of name greetings.
+      firstName:
+        type: string
+        description: First name of the contact.
+      lastName:
+        type: string
+        description: Last name of the contact.
+      preferredName:
+        type: string
+        description: The name by which the contact would prefer to be addressed.
+      sex:
+        type: string
+        enum:
+        - male
+        - female
+      homePhone:
+        type: string
+        description: Home telephone number for the contact.
+      mobilePhone:
+        type: string
+        description: Contact's mobile number.
+      correspondenceMethod:
+        type: string
+        description: Preferred method of correspondence.
+        enum:
+        - email
+        - mail
+      email:
+        type: string
+        description: The contact's email address
+      mailingAddress:
+        $ref: '#/definitions/physicalAddress_2'
+    description: A person who is a contact of nib Group companies.
+  physicalAddress_2:
+    type: object
+    properties:
+      street:
+        type: string
+        description: The street detail of the physical address.
+      city:
+        type: string
+        description: The city of the physical address.
+      state:
+        type: string
+        description: The state of the physical address.
+      postcode:
+        type: string
+        description: The postcode of the physical address.
+      countryCode:
+        type: string
+        description: The ISO 3166-1 alpha-3 country code of the physical address e.g. AUS.
+        minLength: 3
+        maxLength: 3
+        pattern: /^[A-Z]{3}$/
+    description: A physical address for sending postal correspondence, or identifying the registered address of an entity.
   getGroupResponse_sections:
     type: object
     properties:

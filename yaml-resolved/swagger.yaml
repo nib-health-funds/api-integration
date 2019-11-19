@@ -1,0 +1,1429 @@
+---
+swagger: "2.0"
+info:
+  description: API for querying data stored in WHICS.
+  version: 1.0.0
+  title: whics integration API
+  contact:
+    email: CoreApplicationsDevelopment@nib.com.au
+schemes:
+- https
+paths:
+  /v3/contact:
+    get:
+      summary: Get the contact data for all contacts matching the query parameter(s).
+      description: Return data relevant to all contacts matching the search criteria. At least one query parameter is required.
+      operationId: getContactListV3
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: phone
+        in: query
+        description: Phone number of a nib group contact. This could be the home phone or their mobile phone number. The expected format is the + prefix followed by the full phone number (i.e. including country code and area code) expressed as digits only. e.g. +61477888999
+        required: false
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getContactListResponseSuccess'
+        400:
+          description: Invalid call condition - phone parameter is required.
+          schema:
+            $ref: '#/definitions/getContactListResponseFail'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+          schema:
+            $ref: '#/definitions/getContactListResponseAuth'
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/getContactListResponseError'
+      security:
+      - oauth: []
+  /contact/{contactId}:
+    get:
+      summary: Get the contact and policy data for the given contact ID.
+      description: Return data relevant to the contact and policy for the given contact ID.
+      operationId: getContact
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: contactId
+        in: path
+        description: For whics and GU whics PHI customers, this is an 8 digit customer (client or dependant) ID. For an authorised person who is not a PHI customer, this will include a type code and authority number as well. e.g. AUTH-12345678-1.
+        required: true
+        type: string
+      - name: brand
+        in: query
+        description: The brand of insurance, e.g. GU, NIB, NIB_CORPORATE, NIB_OSHC, NIB_INTERNATIONAL, IMAN, UNITED_HEALTHCARE, etc. This value is case-insensitive.
+        required: false
+        type: string
+        default: GU
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getContactResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Contact not found
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v2/contact/{contactId}:
+    get:
+      summary: Get the contact and policy data for the given contact ID.
+      description: Return data relevant to the contact and policy for the given contact ID.
+      operationId: getContactV2
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: contactId
+        in: path
+        description: 'In all cases the ID must contain a source system prefix (currently gu: or nib:). For whics and GU whics PHI customers, this is an 8 digit customer (client or dependant) ID. e.g. nib:12345678 For an authorised person who is not a PHI customer, this will include a type code and authority number as well. e.g. nib:AUTH-12345678-1'
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getContactResponseV2'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Contact not found
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v1/contact/{contactId}/coverHistory:
+    get:
+      summary: Get the health insurance cover history for the given contact ID.
+      description: Return the data for the health insurance cover history for the given contact.
+      operationId: getContactCover
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: contactId
+        in: path
+        description: For whics this is an whics customer id.
+        required: true
+        type: string
+      - name: source
+        in: query
+        description: The source of insurance, e.g. GU, NIB
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getContactCoverResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Contact not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v1/contact/{contactId}/healthInsurancePolicy:
+    get:
+      summary: Get the health insurance policy data for the given contact ID.
+      description: Return the data for the health insurance policy to which the given contact belongs. This includes a list of the people covered by the policy. The query is only valid if the contact is currently active on a policy. (A customer can be active on at most one policy at a time.) The policy itself must also be currently active, terminated or suspended, the query is not pertinent to prospects.
+      operationId: getHealthInsurancePolicy
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: contactId
+        in: path
+        description: For whics this is an 8 digit customer (client or dependant) ID.
+        required: true
+        type: string
+      - name: brand
+        in: query
+        description: The brand of insurance, e.g. GU, NIB, NIB_CORPORATE, NIB_OSHC, NIB_INTERNATIONAL, IMAN, UNITED_HEALTHCARE, etc. This value is case-insensitive.
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getHealthInsurancePolicyResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Health Insurance Policy not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v2/contact/{contactId}/healthInsurancePolicy:
+    get:
+      summary: Get the health insurance policy data for the given contact ID.
+      description: Return the data for the health insurance policy to which the given contact belongs. This includes a list of the people covered by the policy. The query is only valid if the contact is currently active on a policy. (A customer can be active on at most one policy at a time.) The policy itself must also be currently active, terminated or suspended, the query is not pertinent to prospects.
+      operationId: getHealthInsurancePolicyV2
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: contactId
+        in: path
+        description: For whics this is an 8 digit customer (client or dependant) ID.
+        required: true
+        type: string
+      - name: brand
+        in: query
+        description: The brand of insurance, e.g. GU, NIB, NIB_CORPORATE, NIB_OSHC, NIB_INTERNATIONAL, IMAN, UNITED_HEALTHCARE, etc. This value is case-insensitive.
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getHealthInsurancePolicyResponseV2'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Health Insurance Policy not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v3/contact/{contactId}/healthInsurancePolicy:
+    get:
+      summary: Get the health insurance policy data for the given contact ID.
+      description: Return the data for the health insurance policy to which the given contact belongs. This includes a list of the people covered by the policy. The query is only valid if the contact is currently active on a policy. (A customer can be active on at most one policy at a time.) The policy itself must also be currently active, terminated or suspended, the query is not pertinent to prospects.
+      operationId: getHealthInsurancePolicyV3
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: contactId
+        in: path
+        description: 'For whics this is an 8 digit customer (client or dependant) ID, prefixed with a source system prefix (currently gu: or nib:). e.g. nib:12345678'
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getHealthInsurancePolicyResponseV2'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Health Insurance Policy not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v1/policy/{healthPolicyId}:
+    get:
+      summary: Get the health insurance policy data for the given health policy ID.
+      description: Return the data for the health insurance policy. This includes a list of the people covered by the policy. The query is only valid if the contact is currently active on a policy. (A customer can be active on at most one policy at a time.) The policy itself must also be currently active, terminated or suspended, the query is not pertinent to prospects.
+      operationId: getHealthInsurancePolicyByPolicy
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: healthPolicyId
+        in: path
+        description: For whics this is an hpolicy ID.
+        required: true
+        type: string
+      - name: source
+        in: query
+        description: The source of insurance, e.g. GU, NIB. This value is case-insensitive.
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getHealthInsurancePolicyResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Health Insurance Policy not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v2/policy/{healthPolicyId}:
+    get:
+      summary: Get the health insurance policy data for the given health policy ID.
+      description: Return the data for the health insurance policy. This includes a list of the people covered by the policy. The query is only valid if the contact is currently active on a policy. (A customer can be active on at most one policy at a time.) The policy itself must also be currently active, terminated or suspended, the query is not pertinent to prospects.
+      operationId: getHealthInsurancePolicyByPolicyV2
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: healthPolicyId
+        in: path
+        description: For whics this is an hpolicy ID.
+        required: true
+        type: string
+      - name: source
+        in: query
+        description: The source of insurance, e.g. GU, NIB. This value is case-insensitive.
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getHealthInsurancePolicyResponseV2'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Health Insurance Policy not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v3/policy/{healthPolicyId}:
+    get:
+      summary: Get the health insurance policy data for the given health policy ID.
+      description: Return the data for the health insurance policy. This includes a list of the people covered by the policy. The query is only valid if the contact is currently active on a policy. (A customer can be active on at most one policy at a time.) The policy itself must also be currently active, terminated or suspended, the query is not pertinent to prospects.
+      operationId: getHealthInsurancePolicyByPolicyV3
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: healthPolicyId
+        in: path
+        description: 'The WHICS hpolicy ID, prefixed by a source system prefix (currently gu: or nib:) that indicates the source of the insurance. e.g. nib:1234567H'
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getHealthInsurancePolicyResponseV2'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Health Insurance Policy not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v1/policy/{healthPolicyId}/policyHolder:
+    get:
+      summary: Get the health insurance policy holder for the given policy ID.
+      description: Return the data for the health insurance policy holder to which the given policy belongs.
+      operationId: getPolicyHolder
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: healthPolicyId
+        in: path
+        description: For whics this is an whics health policy id.
+        required: true
+        type: string
+      - name: source
+        in: query
+        description: The source of insurance, e.g. GU, NIB
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getPolicyHolderResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Health Insurance Policy not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v2/policy/{healthPolicyId}/policyHolder:
+    get:
+      summary: Get the health insurance policy holder for the given policy ID.
+      description: Return the data for the health insurance policy holder to which the given policy belongs.
+      operationId: getPolicyHolderV2
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: healthPolicyId
+        in: path
+        description: 'The WHICS hpolicy ID, prefixed by a source system prefix (currently gu: or nib:) that indicates the source of the insurance. e.g. nib:1234567H'
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getPolicyHolderResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Health Insurance Policy not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v1/policy/{healthPolicyId}/coverHistory:
+    get:
+      summary: Get the health insurance cover history for the given policy ID.
+      description: Return the data for the health insurance cover history for the given policy.
+      operationId: getCoverHistory
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: healthPolicyId
+        in: path
+        description: For whics this is an whics health policy id.
+        required: true
+        type: string
+      - name: source
+        in: query
+        description: The source of insurance, e.g. GU, NIB
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getCoverHistoryResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Health Insurance Policy not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /group/{groupId}:
+    get:
+      summary: Get the Group and Section details for a Group Account.
+      description: Return data relevant to the Group Account
+      operationId: getGroup
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: groupId
+        in: path
+        description: 'Group ID. This is the group''s identifying number (5 digits) prefixed with a source system prefix (currently gu: or nib:) that indicates the source of the insurance. (e.g. nib:12345)'
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getGroupResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Group not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v2/group/{groupId}:
+    get:
+      summary: Get the Group and Section details for a Group Account.
+      description: Return data relevant to the Group Account
+      operationId: getGroupV2
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: groupId
+        in: path
+        description: Group ID. For whics and GU whics, this is the group's identifying number (5 digits) prefixed with the source. (e.g. nib:12345)
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getGroupResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Group not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /provider/{providerId}:
+    get:
+      summary: Get the provider data for a given provider ID.
+      description: Return data relevant to the provider for the given provider ID
+      operationId: getProvider
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: providerId
+        in: path
+        description: 'This is an 8 character provider ID prefixed with a source system prefix (currently gu: or nib:) that indicates the source of the insurance. (e.g. nib:1234ABCD)'
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getProviderResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Provider not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v2/provider/{providerId}:
+    get:
+      summary: Get the provider data for a given provider ID.
+      description: Return data relevant to the provider for the given provider ID
+      operationId: getProviderV2
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: providerId
+        in: path
+        description: For whics and GU whics this is an 8 character provider ID prefixed with the source. (e.g. nib:1234ABCD)
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getProviderResponse'
+        401:
+          description: Unauthorized - caller does not have permissions for this request.
+        404:
+          description: Provider not found.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v1/financialAccount/{accountId}:
+    get:
+      summary: Get account details - could be billing or claims payment accounts.
+      operationId: getAccount
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: accountId
+        in: path
+        description: An opaque account identifier. (internally, it is like "00000383-2007-06-21-9999-12-31-B", ie client,dte_on,dte_off,fin_acct)
+        required: true
+        type: string
+      - name: brand
+        in: query
+        description: The brand of insurance, e.g. NIB, NIB_CORPORATE, NIB_OSHC, NIB_INTERNATIONAL, IMAN, UNITED_HEALTHCARE, etc. This value is case-insensitive.
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getAccountResponse'
+        204:
+          description: No content. This may be returned if called with an unsupported brand.
+        400:
+          description: the brand parameter is missing or the accountId has an invalid format.
+        404:
+          description: the specified accountId has expired.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v2/financialAccount/{accountId}:
+    get:
+      summary: Get account details - could be billing or claims payment accounts.
+      operationId: getAccountV2
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: accountId
+        in: path
+        description: An opaque account identifier. (internally, it is like "nib:00000383-2007-06-21-9999-12-31-B", ie source,client,dte_on,dte_off,fin_acct)
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/getAccountResponse'
+        204:
+          description: No content. This may be returned if called with an unsupported brand.
+        400:
+          description: the brand parameter is missing or the accountId has an invalid format.
+        404:
+          description: the specified accountId has expired.
+        500:
+          description: A server error has occurred.
+          schema:
+            $ref: '#/definitions/error'
+      security:
+      - oauth: []
+  /v1/claims/item_coverage/{healthPolicyId}:
+    get:
+      summary: Determine whether a specific item is covered by a policy on a given date.
+      operationId: getItemCoverage
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: healthPolicyId
+        in: path
+        description: The ID of the health policy.
+        required: true
+        type: string
+        pattern: /^[A-Z0-9]{1,8}$/
+      - name: effectiveDate
+        in: query
+        description: The date to check coverage on
+        required: true
+        type: string
+        format: date
+      - name: itemType
+        in: query
+        description: The item type, i.e. Hospital, Medical, Ancillary, or Dental
+        required: true
+        type: string
+        enum:
+        - H
+        - M
+        - A
+        - D
+      - name: itemCode
+        in: query
+        description: The items code
+        required: true
+        type: string
+        pattern: /^[A-Z0-9]{0,6}$/
+      - name: isAccident
+        in: query
+        description: Whether the claim is for an accident
+        required: false
+        type: boolean
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/getItemCoverageResponseSuccess'
+        400:
+          description: Fail
+          schema:
+            $ref: '#/definitions/getItemCoverageResponseFail'
+        401:
+          description: NotAuthenticated
+          schema:
+            $ref: '#/definitions/getItemCoverageResponseAuth'
+        403:
+          description: NotAuthorised
+          schema:
+            $ref: '#/definitions/getItemCoverageResponseAuth'
+        404:
+          description: Missing
+          schema:
+            $ref: '#/definitions/getItemCoverageResponseMissing'
+        500:
+          description: Error
+          schema:
+            $ref: '#/definitions/getItemCoverageResponseError'
+        default:
+          description: Error
+          schema:
+            $ref: '#/definitions/getItemCoverageResponseError'
+      security:
+      - oauth: []
+securityDefinitions:
+  oauth:
+    description: An api key will be assigned to each user of these APIs.
+    type: apiKey
+    name: Authorization
+    in: header
+definitions:
+  getContactListResponseSuccess:
+    allOf:
+    - $ref: '#/definitions/status'
+    - $ref: '#/definitions/getContactListResponseData'
+    - $ref: '#/definitions/meta'
+  getContactListResponseFail:
+    allOf:
+    - $ref: '#/definitions/status'
+    - $ref: '#/definitions/details'
+    - $ref: '#/definitions/meta'
+  getContactListResponseAuth:
+    allOf:
+    - $ref: '#/definitions/status'
+    - $ref: '#/definitions/meta'
+  getContactListResponseError:
+    allOf:
+    - $ref: '#/definitions/status'
+    - $ref: '#/definitions/message'
+    - $ref: '#/definitions/meta'
+  getContactListResponseData:
+    type: object
+    required:
+    - data
+    properties:
+      data:
+        $ref: '#/definitions/groupContactListV3'
+  getContactResponse:
+    allOf:
+    - $ref: '#/definitions/groupContact'
+    - {}
+  getContactResponseV2:
+    allOf:
+    - $ref: '#/definitions/groupContactV2'
+    - {}
+  getGroupResponse:
+    type: object
+    properties:
+      groupId:
+        type: string
+        description: the identifying number of the group.
+      groupName:
+        type: string
+        description: The name of the group.
+      sections:
+        type: array
+        items:
+          $ref: '#/definitions/getGroupResponse_sections'
+    description: An account group
+  getHealthInsurancePolicyResponse:
+    $ref: '#/definitions/healthInsurancePolicy'
+  getHealthInsurancePolicyResponseV2:
+    $ref: '#/definitions/healthInsurancePolicyV2'
+  getPolicyHolderResponse:
+    type: object
+    properties:
+      contact:
+        $ref: '#/definitions/policyHolder'
+  getContactCoverResponse:
+    $ref: '#/definitions/contactCoverHistory'
+  getCoverHistoryResponse:
+    $ref: '#/definitions/coverHistory'
+  getProviderResponse:
+    type: object
+    properties:
+      contact:
+        $ref: '#/definitions/provider'
+  getAccountResponse:
+    type: object
+    properties:
+      effectiveDate:
+        type: string
+        format: date
+      ceaseDate:
+        type: string
+        format: date
+      bankAccount:
+        $ref: '#/definitions/getAccountResponse_bankAccount'
+      creditCard:
+        $ref: '#/definitions/getAccountResponse_creditCard'
+    description: will contain either bankAccount or creditCard elements, not both.
+  getItemCoverageResponseSuccess:
+    allOf:
+    - $ref: '#/definitions/status'
+    - $ref: '#/definitions/meta'
+    - $ref: '#/definitions/getItemCoverageResponseData'
+  getItemCoverageResponseFail:
+    allOf:
+    - $ref: '#/definitions/status'
+    - $ref: '#/definitions/meta'
+    - $ref: '#/definitions/details'
+  getItemCoverageResponseAuth:
+    allOf:
+    - $ref: '#/definitions/status'
+    - $ref: '#/definitions/meta'
+  getItemCoverageResponseError:
+    allOf:
+    - $ref: '#/definitions/status'
+    - $ref: '#/definitions/meta'
+    - $ref: '#/definitions/message'
+  getItemCoverageResponseMissing:
+    allOf:
+    - $ref: '#/definitions/status'
+    - $ref: '#/definitions/meta'
+    - $ref: '#/definitions/message'
+  getItemCoverageResponseData:
+    type: object
+    required:
+    - data
+    properties:
+      data:
+        $ref: '#/definitions/getItemCoverageResponseData_data'
+  account:
+    type: object
+    properties:
+      groupId:
+        type: string
+        description: the identifying number of the group.
+      groupName:
+        type: string
+      sectionId:
+        type: string
+        description: The section ID within the group.
+      sectionName:
+        type: string
+      brokerId:
+        type: string
+        description: The broker ID for the group.
+      brokerName:
+        type: string
+    description: The identifiers that relate to the account.
+  contactUri:
+    type: object
+    properties:
+      contactId:
+        type: string
+        description: A unique identifier for the contact.
+      link:
+        $ref: '#/definitions/link'
+    description: Unique identifier and access URI for a contact.
+  healthInsurancePolicy:
+    allOf:
+    - $ref: '#/definitions/healthInsurancePolicySummary'
+    - {}
+    description: Extended form of health insurance policy that is held by a contact. The health insurance policy provides health cover to a set of PHI persons. A health insurance policy defines the holding of health products at any given time.
+  healthInsurancePolicyV2:
+    allOf:
+    - $ref: '#/definitions/healthInsurancePolicySummary'
+    - {}
+    description: Extended form of health insurance policy that is held by a contact. The health insurance policy provides health cover to a set of PHI persons. A health insurance policy defines the holding of health products at any given time.
+  healthInsurancePolicySummary:
+    type: object
+    properties:
+      policyHolderId:
+        type: string
+        description: the policy-holder's customer id (aka the WHICS client id of the policy).
+      healthPolicyId:
+        type: string
+        description: The policy identifier (aka WHICS hpolicy value).
+      brand:
+        type: string
+        description: The brand of insurance, e.g. GU, NIB, NIB_CORPORATE, NIB_OSHC, NIB_INTERNATIONAL, IMAN, UNITED_HEALTHCARE, etc.
+      account:
+        $ref: '#/definitions/account'
+    description: Summary form of health insurance policy that is held by a contact. The health insurance policy provides health cover to a set of PHI persons. A health insurance policy defines the holding of health products at any given time.
+  coverHistory:
+    type: object
+    properties:
+      coverHistory:
+        type: array
+        description: Details of products and persons on the policy for set date ranges
+        items:
+          $ref: '#/definitions/coverHistory_coverHistory'
+  contactCoverHistory:
+    type: object
+    properties:
+      healthInsuranceCover:
+        type: array
+        items:
+          $ref: '#/definitions/contactCoverHistory_healthInsuranceCover'
+      previousHealthInsuranceCover:
+        type: array
+        items:
+          $ref: '#/definitions/contactCoverHistory_previousHealthInsuranceCover'
+  groupContact:
+    type: object
+    properties:
+      contactId:
+        type: string
+        description: A unique identifier for the contact.
+      birthdate:
+        type: string
+        format: date
+        description: The contact's date of birth.
+      salutation:
+        type: string
+        description: Honorific abbreviation, word, or phrase to be used in front of name greetings.
+      firstName:
+        type: string
+        description: First name of the contact.
+      lastName:
+        type: string
+        description: Last name of the contact.
+      preferredName:
+        type: string
+        description: The name by which the contact would prefer to be addressed.
+      sex:
+        type: string
+        enum:
+        - male
+        - female
+      homePhone:
+        type: string
+        description: Home telephone number for the contact.
+      mobilePhone:
+        type: string
+        description: Contact's mobile number.
+      correspondenceMethod:
+        type: string
+        description: Preferred method of correspondence.
+        enum:
+        - email
+        - mail
+      email:
+        type: string
+        description: The contact's email address
+      mailingAddress:
+        $ref: '#/definitions/physicalAddress'
+    description: A person who is a contact of nib Group companies.
+  groupContactV2:
+    type: object
+    properties:
+      contactId:
+        type: string
+        description: A unique identifier for the contact.
+      birthdate:
+        type: string
+        format: date
+        description: The contact's date of birth.
+      salutation:
+        type: string
+        description: Honorific abbreviation, word, or phrase to be used in front of name greetings.
+      firstName:
+        type: string
+        description: First name of the contact.
+      lastName:
+        type: string
+        description: Last name of the contact.
+      preferredName:
+        type: string
+        description: The name by which the contact would prefer to be addressed.
+      sex:
+        type: string
+        enum:
+        - male
+        - female
+      homePhone:
+        type: string
+        description: Home telephone number for the contact.
+      mobilePhone:
+        type: string
+        description: Contact's mobile number.
+      workPhone:
+        type: string
+        description: Work telephone number for the contact.
+      correspondenceMethod:
+        type: string
+        description: Preferred method of correspondence.
+        enum:
+        - email
+        - mail
+      email:
+        type: string
+        description: The contact's email address
+      mailingAddress:
+        $ref: '#/definitions/physicalAddress'
+      residentialAddress:
+        $ref: '#/definitions/physicalAddress'
+    description: A person who is a contact of nib Group companies.
+  groupContactV3:
+    type: object
+    properties:
+      contactId:
+        type: string
+        description: A unique identifier for the contact.
+      birthdate:
+        type: string
+        format: date
+        description: The contact's date of birth.
+      salutation:
+        type: string
+        description: Honorific abbreviation, word, or phrase to be used in front of name greetings.
+      firstName:
+        type: string
+        description: First name of the contact.
+      lastName:
+        type: string
+        description: Last name of the contact.
+      preferredName:
+        type: string
+        description: The name by which the contact would prefer to be addressed.
+      sex:
+        type: string
+        enum:
+        - male
+        - female
+      homePhone:
+        type: string
+        description: Home telephone number for the contact.
+      mobilePhone:
+        type: string
+        description: Contact's mobile number.
+      correspondenceMethod:
+        type: string
+        description: Preferred method of correspondence.
+        enum:
+        - email
+        - mail
+      email:
+        type: string
+        description: The contact's email address
+      mailingAddress:
+        $ref: '#/definitions/physicalAddress'
+      residentialAddress:
+        $ref: '#/definitions/physicalAddress'
+    description: A person who is a contact of nib Group companies.
+  groupContactListV3:
+    type: object
+    properties:
+      contactList:
+        type: array
+        items:
+          $ref: '#/definitions/groupContactV3'
+  link:
+    type: object
+    properties:
+      href:
+        type: string
+        description: Absolute URI of the link
+      rel:
+        type: string
+        description: Link relation type
+    description: Hypermedia link
+  physicalAddress:
+    type: object
+    properties:
+      street:
+        type: string
+        description: The street detail of the physical address.
+      city:
+        type: string
+        description: The city of the physical address.
+      state:
+        type: string
+        description: The state of the physical address.
+      postcode:
+        type: string
+        description: The postcode of the physical address.
+      countryCode:
+        type: string
+        description: The ISO 3166-1 alpha-3 country code of the physical address e.g. AUS.
+        minLength: 3
+        maxLength: 3
+        pattern: /^[A-Z]{3}$/
+    description: A physical address for sending postal correspondence, or identifying the registered address of an entity.
+  policyHolder:
+    type: object
+    properties:
+      policyHolderId:
+        type: string
+        description: The ID of the policy holder.
+    description: Data for the policy holder of a policy
+  provider:
+    type: object
+    properties:
+      providerId:
+        type: string
+        description: The ID of the provider
+      name:
+        type: string
+      phone:
+        type: string
+      fax:
+        type: string
+      email:
+        type: string
+      mailingAddress:
+        $ref: '#/definitions/physicalAddress'
+      providerServiceTypes:
+        type: array
+        description: The list of service types this provider is registered to provide.
+        items:
+          type: string
+          enum:
+          - dental
+          - ancillary
+          - hospital
+          - medical
+      providerStatus:
+        type: string
+        description: Indicates whether or not the provider is active at the time of retrieval.
+        enum:
+        - active
+        - inactive
+    description: A service provider that has or can provide services to customers.
+  status:
+    type: object
+    required:
+    - status
+    properties:
+      status:
+        type: string
+  meta:
+    type: object
+    properties:
+      meta:
+        $ref: '#/definitions/meta_meta'
+  details:
+    type: object
+    required:
+    - details
+    properties:
+      details:
+        type: object
+        properties: {}
+  message:
+    type: object
+    required:
+    - message
+    properties:
+      message:
+        type: string
+  error:
+    type: object
+    required:
+    - message
+    properties:
+      message:
+        type: string
+        description: The error message.
+  getGroupResponse_sections:
+    type: object
+    properties:
+      sectionId:
+        type: string
+        description: The ID of the section within the group.
+      sectionName:
+        type: string
+        description: The name of the section.
+      brokerId:
+        type: string
+        description: The ID of the broker associated with this section.
+      brokerName:
+        type: string
+        description: The name of the broker associated with this section.
+  getAccountResponse_bankAccount:
+    type: object
+    properties:
+      accountName:
+        type: string
+      bsb:
+        type: string
+      accountNumber:
+        type: string
+  getAccountResponse_creditCard:
+    type: object
+    properties:
+      cardHolderName:
+        type: string
+      maskedCreditCardNumber:
+        type: string
+      cardType:
+        type: string
+      expiryMonthYear:
+        type: string
+  getItemCoverageResponseData_data:
+    type: object
+    required:
+    - effectiveDate
+    - healthPolicyId
+    - isAccident
+    - itemCode
+    - itemType
+    - result
+    properties:
+      effectiveDate:
+        type: string
+        format: date
+        description: The date to check coverage on
+      itemType:
+        type: string
+        description: The item type, i.e. Hospital, Medical, Ancillary, or Dental
+        enum:
+        - H
+        - M
+        - A
+        - D
+      itemCode:
+        type: string
+        description: The items code
+        pattern: /^[A-Z0-9]{0,6}$/
+      isAccident:
+        type: boolean
+        description: Whether the claim is for an accident
+      healthPolicyId:
+        type: string
+      result:
+        type: string
+        enum:
+        - Covered
+        - Not Covered
+        - Unknown
+  coverHistory_product:
+    type: object
+    properties:
+      productId:
+        type: string
+        description: The unique identifier of the product. Not implemented for GU brand.
+      productCode:
+        type: string
+        description: The product code. Only implemented for GU Brand. Will be deprecated in future versions.
+      productName:
+        type: string
+        description: The name of the product.
+      excess:
+        type: integer
+        description: This is the amount the customer must pay before the benefit is paid. Not implemented for GU brand.
+      type:
+        type: string
+        description: The broad category of the product. Only implemented for GU Brand.
+        enum:
+        - ambulance_only
+        - ancillary
+        - combined
+        - hospital
+        - overseas_ancillary
+        - overseas_combined
+        - overseas_hospital
+      link:
+        $ref: '#/definitions/link'
+  coverHistory_productsHeld:
+    type: object
+    properties:
+      product:
+        $ref: '#/definitions/coverHistory_product'
+  coverHistory_insuredPerson:
+    type: object
+    properties:
+      firstName:
+        type: string
+        description: First name of the person.
+      lastName:
+        type: string
+        description: Last name of the person.
+  coverHistory_insuredPersons:
+    type: object
+    properties:
+      insuredPerson:
+        $ref: '#/definitions/coverHistory_insuredPerson'
+  coverHistory_coverHistory:
+    type: object
+    properties:
+      from:
+        type: string
+        format: date
+        description: The start date of the current cover item.
+      to:
+        type: string
+        format: date
+        description: The end date of the current cover item.
+      status:
+        type: string
+        description: the status of the policy.
+        enum:
+        - active
+        - terminated
+        - suspended
+      marketSegment:
+        type: string
+        description: Which market this health insurance policy belongs to. Only implemented for GU brand.
+        enum:
+        - australian_residents_health_insurance
+        - international_workers_health_insurance
+        - international_students_health_insurance
+      scale:
+        type: string
+        description: Scale of the policy.
+        enum:
+        - family
+        - single
+        - single_parent_family
+        - couple
+        - extended_family
+      rateCode:
+        type: string
+        description: The rate code for any discount applied to the policy. This is a WHICS field that will be deprecated in future versions.
+      ambulanceLevyApplies:
+        type: boolean
+        description: Indicates whether the policy products includes the ambulance levy.
+      productsHeld:
+        type: array
+        items:
+          $ref: '#/definitions/coverHistory_productsHeld'
+      insuredPersons:
+        type: array
+        description: The details of the individuals who are covered by this policy.
+        items:
+          $ref: '#/definitions/coverHistory_insuredPersons'
+    description: health insurance policy cover history for a policy.
+  contactCoverHistory_healthInsuranceCover:
+    type: object
+    properties:
+      healthPoliciId:
+        type: string
+        description: the policy id
+      from:
+        type: string
+        format: date
+        description: The start date of the current cover item.
+      to:
+        type: string
+        format: date
+        description: The end date of the current cover item.
+      status:
+        type: string
+        description: the status of the policy.
+        enum:
+        - active
+        - suspended
+      suspensionReason:
+        type: string
+        description: the reason for suspension (nib only).
+        enum:
+        - overseas
+        - financial_hardship
+      campaign:
+        type: string
+        description: campaign code for cover.
+      policyWaiver:
+        type: string
+        description: waiver code for the policy.
+      insuredPersonWaiver:
+        type: string
+        description: waiver code for the insured person.
+      marketSegment:
+        type: string
+        description: Which market this health insurance policy belongs to.
+        enum:
+        - australian_residents_health_insurance
+        - international_workers_health_insurance
+        - international_students_health_insurance
+      scale:
+        type: string
+        description: Scale of the policy.
+        enum:
+        - family
+        - single
+        - single_parent_family
+        - couple
+        - extended_family
+      rateCode:
+        type: string
+        description: The rate code for any discount applied to the policy. This is a WHICS field that will be deprecated in future versions.
+      productsHeld:
+        type: array
+        items:
+          $ref: '#/definitions/coverHistory_productsHeld'
+  contactCoverHistory_previousHealthInsuranceCover:
+    type: object
+    properties:
+      healthPoliciId:
+        type: string
+        description: the policy id
+      from:
+        type: string
+        format: date
+        description: The start date of the current cover item.
+      to:
+        type: string
+        format: date
+        description: The end date of the current cover item.
+      status:
+        type: string
+        description: the status of the policy.
+        enum:
+        - active
+      scale:
+        type: string
+        description: Scale of the policy.
+        enum:
+        - family
+        - single
+        - single_parent_family
+        - couple
+        - extended_family
+      rateCode:
+        type: string
+        description: The rate code for any discount applied to the policy. This is a WHICS field that will be deprecated in future versions.
+      productsHeld:
+        type: array
+        items:
+          $ref: '#/definitions/coverHistory_productsHeld'
+  meta_meta:
+    type: object
+    required:
+    - schemaReference
+    - type
+    - version
+    properties:
+      version:
+        type: string
+      type:
+        type: string
+      schemaReference:
+        type: string
+externalDocs:
+  url: https://nib-it.atlassian.net/wiki/spaces/CC/pages/700874983/CRM+Integration+and+Ecosystem
